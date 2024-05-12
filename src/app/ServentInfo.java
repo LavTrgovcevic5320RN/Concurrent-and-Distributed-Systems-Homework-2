@@ -15,13 +15,17 @@ public class ServentInfo implements Serializable {
 	private final String ipAddress;
 	private final int listenerPort;
 	private final List<Integer> neighbors;
-	
-	public ServentInfo(String ipAddress, int id, int listenerPort, List<Integer> neighbors) {
+	private final boolean isInitiator;
+	private boolean parent;
+
+	public ServentInfo(String ipAddress, int id, int listenerPort, List<Integer> neighbors, boolean isInitiator) {
 		this.ipAddress = ipAddress;
 		this.listenerPort = listenerPort;
 		this.id = id;
 		this.neighbors = neighbors;
-	}
+		this.isInitiator = isInitiator;
+        this.parent = false;
+    }
 
 	public String getIpAddress() {
 		return ipAddress;
@@ -38,7 +42,19 @@ public class ServentInfo implements Serializable {
 	public List<Integer> getNeighbors() {
 		return neighbors;
 	}
-	
+
+	public boolean isInitiator() {
+		return isInitiator;
+	}
+
+	public boolean getParent() {
+		return parent;
+	}
+
+	public void setParent(boolean parent) {
+		this.parent = parent;
+	}
+
 	@Override
 	public String toString() {
 		return "[" + id + "|" + ipAddress + "|" + listenerPort + "]";

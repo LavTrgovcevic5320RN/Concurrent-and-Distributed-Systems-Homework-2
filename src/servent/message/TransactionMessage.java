@@ -1,6 +1,7 @@
 package servent.message;
 
 import app.ServentInfo;
+import app.SnapshotIndicator;
 import app.snapshot_bitcake.BitcakeManager;
 import app.snapshot_bitcake.LaiYangBitcakeManager;
 
@@ -15,7 +16,7 @@ public class TransactionMessage extends BasicMessage {
 	private static final long serialVersionUID = -333251402058492901L;
 
 	private transient BitcakeManager bitcakeManager;
-	
+
 	public TransactionMessage(ServentInfo sender, ServentInfo receiver, int amount, BitcakeManager bitcakeManager) {
 		super(MessageType.TRANSACTION, sender, receiver, String.valueOf(amount));
 		this.bitcakeManager = bitcakeManager;
@@ -29,12 +30,16 @@ public class TransactionMessage extends BasicMessage {
 	@Override
 	public void sendEffect() {
 		int amount = Integer.parseInt(getMessageText());
-		
+
 		bitcakeManager.takeSomeBitcakes(amount);
-		if (bitcakeManager instanceof LaiYangBitcakeManager && isWhite()) {
-			LaiYangBitcakeManager lyFinancialManager = (LaiYangBitcakeManager)bitcakeManager;
+		if (bitcakeManager instanceof LaiYangBitcakeManager) {
+			LaiYangBitcakeManager lyBitcakeManager = (LaiYangBitcakeManager)bitcakeManager;
 			
-			lyFinancialManager.recordGiveTransaction(getReceiverInfo().getId(), amount);
+			lyBitcakeManager.recordGiveTransaction(getReceiverInfo().getId(), amount);
+			for (SnapshotIndicator snapshotIndicator : getSnapshotIndicators()) {
+				lyBitcakeManager.recordGiveTransaction(snapshotIndicator, getReceiverInfo().getId(),
+						amount);
+			}
 		}
 	}
 }

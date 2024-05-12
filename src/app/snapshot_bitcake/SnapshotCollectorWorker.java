@@ -1,11 +1,13 @@
 package app.snapshot_bitcake;
 
+import app.AppConfig;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import app.AppConfig;
 
 /**
  * Main snapshot collector class. Has support for Naive, Chandy-Lamport
@@ -19,10 +21,14 @@ public class SnapshotCollectorWorker implements SnapshotCollector {
 	private volatile boolean working = true;
 	
 	private AtomicBoolean collecting = new AtomicBoolean(false);
-	
+
 	private Map<Integer, LYSnapshotResult> collectedLYValues = new ConcurrentHashMap<>();
+
+	private int mySnapshotVersion = 0;
 	
 	private BitcakeManager bitcakeManager;
+
+	private List<Integer> children = new CopyOnWriteArrayList<>();
 
 	public SnapshotCollectorWorker() {
 		bitcakeManager = new LaiYangBitcakeManager();
@@ -32,7 +38,8 @@ public class SnapshotCollectorWorker implements SnapshotCollector {
 	public BitcakeManager getBitcakeManager() {
 		return bitcakeManager;
 	}
-	
+
+
 	@Override
 	public void run() {
 		while(working) {
@@ -59,9 +66,11 @@ public class SnapshotCollectorWorker implements SnapshotCollector {
 			 * 2. Wait for all the responses
 			 * 3. Print result
 			 */
-			
+
 			//1 send asks
-			((LaiYangBitcakeManager)bitcakeManager).markerEvent(AppConfig.myServentInfo.getId(), this);
+			mySnapshotVersion++;
+			((LaiYangBitcakeManager)bitcakeManager).markerEvent(AppConfig.myServentInfo.getId(), this,
+					mySnapshotVersion, null);
 			
 			//2 wait for responses or finish
 			boolean waiting = true;
@@ -114,16 +123,20 @@ public class SnapshotCollectorWorker implements SnapshotCollector {
 			collectedLYValues.clear(); //reset for next invocation
 			collecting.set(false);
 		}
-
 	}
 	
 	@Override
 	public void addLYSnapshotInfo(int id, LYSnapshotResult lySnapshotResult) {
 		collectedLYValues.put(id, lySnapshotResult);
 	}
-	
+
 	@Override
 	public void startCollecting() {
+		if (!AppConfig.myServentInfo.isInitiator()) {
+			AppConfig.timestampedErrorPrint("Tried to collect snapshot from non-initiator node");
+			return;
+		}
+
 		boolean oldValue = this.collecting.getAndSet(true);
 		
 		if (oldValue == true) {

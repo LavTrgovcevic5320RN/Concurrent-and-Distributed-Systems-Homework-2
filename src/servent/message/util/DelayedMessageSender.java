@@ -1,12 +1,13 @@
 package servent.message.util;
 
+import app.AppConfig;
+import app.ServentInfo;
+import servent.message.BasicMessage;
+import servent.message.Message;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-
-import app.AppConfig;
-import app.ServentInfo;
-import servent.message.Message;
 
 /**
  * This worker sends a message asynchronously. Doing this in a separate thread
@@ -50,9 +51,8 @@ public class DelayedMessageSender implements Runnable {
 			 * to override setRedColor() because of this.
 			 */
 			synchronized (AppConfig.colorLock) {
-				if (AppConfig.isWhite.get() == false) {
-					messageToSend = messageToSend.setRedColor();
-				}
+				((BasicMessage)messageToSend).setSnapshotIndicators(AppConfig.getSnapshotIndicators());
+
 				Socket sendSocket = new Socket(receiverInfo.getIpAddress(), receiverInfo.getListenerPort());
 				
 				ObjectOutputStream oos = new ObjectOutputStream(sendSocket.getOutputStream());
@@ -60,7 +60,7 @@ public class DelayedMessageSender implements Runnable {
 				oos.flush();
 				
 				sendSocket.close();
-				
+
 				messageToSend.sendEffect();
 			}
 		} catch (IOException e) {

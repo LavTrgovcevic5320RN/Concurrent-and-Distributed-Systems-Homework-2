@@ -5,11 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * This class contains all the global application configuration stuff.
@@ -25,15 +23,16 @@ public class AppConfig {
 	
 	private static List<ServentInfo> serventInfoList = new ArrayList<>();
 
+	public static List<Integer> initiatorIds = new ArrayList<>();
 	/**
 	 * If this is true, the system is a clique - all nodes are each other's
 	 * neighbors. 
 	 */
 	public static boolean IS_CLIQUE;
-	
-	public static AtomicBoolean isWhite = new AtomicBoolean(true);
+
+	public static Map<Integer, Integer> initiators = new ConcurrentHashMap<>();
 	public static Object colorLock = new Object();
-	
+
 	/**
 	 * Print a message to stdout with a timestamp
 	 * @param message message to print
@@ -104,7 +103,15 @@ public class AppConfig {
 		if (snapshotType == null) {
 			snapshotType = "none";
 		}
-		
+
+		String[] initiatorsArray = properties.getProperty("initiators").split(",");
+		initiatorIds = Arrays.stream(initiatorsArray)
+				.map(Integer::parseInt)
+				.collect(Collectors.toList());
+		for (Integer id : initiatorIds) {
+			initiators.put(id, 0);
+		}
+
 		for (int i = 0; i < serventCount; i++) {
 			String portProperty = "servent"+i+".port";
 			
@@ -144,7 +151,8 @@ public class AppConfig {
 				}
 			}
 			
-			ServentInfo newInfo = new ServentInfo("localhost", i, serventPort, neighborList);
+			ServentInfo newInfo = new ServentInfo("localhost", i, serventPort, neighborList,
+					initiatorIds.contains(i));
 			serventInfoList.add(newInfo);
 		}
 	}
@@ -168,5 +176,10 @@ public class AppConfig {
 	public static int getServentCount() {
 		return serventInfoList.size();
 	}
-	
+
+	public static List<SnapshotIndicator> getSnapshotIndicators() {
+		return initiators.entrySet().stream()
+				.map(entry -> new SnapshotIndicator(entry.getKey(), entry.getValue()))
+				.collect(Collectors.toList());
+	}
 }
