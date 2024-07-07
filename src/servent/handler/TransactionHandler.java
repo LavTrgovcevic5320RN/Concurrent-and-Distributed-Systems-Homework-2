@@ -35,7 +35,7 @@ public class TransactionHandler implements MessageHandler {
 				if (bitcakeManager instanceof LaiYangBitcakeManager) {
 					LaiYangBitcakeManager lyFinancialManager = (LaiYangBitcakeManager)bitcakeManager;
 					
-					lyFinancialManager.recordGetTransaction(clientMessage.getOriginalSenderInfo().getId(), amountNumber);
+//					lyFinancialManager.recordGetTransaction(clientMessage.getOriginalSenderInfo().getId(), amountNumber);
 					for (SnapshotIndicator snapshotIndicator : clientMessage.getSnapshotIndicators()) {
 						lyFinancialManager.recordGetTransaction(snapshotIndicator, clientMessage.getOriginalSenderInfo().getId(),
 								amountNumber);

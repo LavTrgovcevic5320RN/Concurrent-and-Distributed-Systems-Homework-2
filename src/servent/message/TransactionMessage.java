@@ -35,7 +35,7 @@ public class TransactionMessage extends BasicMessage {
 		if (bitcakeManager instanceof LaiYangBitcakeManager) {
 			LaiYangBitcakeManager lyBitcakeManager = (LaiYangBitcakeManager)bitcakeManager;
 			
-			lyBitcakeManager.recordGiveTransaction(getReceiverInfo().getId(), amount);
+//			lyBitcakeManager.recordGiveTransaction(getReceiverInfo().getId(), amount);
 			for (SnapshotIndicator snapshotIndicator : getSnapshotIndicators()) {
 				lyBitcakeManager.recordGiveTransaction(snapshotIndicator, getReceiverInfo().getId(),
 						amount);
